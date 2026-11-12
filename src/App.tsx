@@ -1,21 +1,11 @@
 import React from 'react';
-import { 
-  LogOut, 
-  HelpCircle, 
-  Sparkles, 
-  Compass, 
-  FileText, 
-  BookOpen, 
-  Smartphone, 
-  ShieldCheck, 
-  Clock, 
-  Bot, 
-  Briefcase, 
-  CheckCircle,
-  Eye,
-  Server,
-  Hand
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  Home, GraduationCap, MessageSquare, Map, BarChart2,
+  Briefcase, LayoutDashboard, LogOut, Clock, Hand, ChevronRight,
+  Sparkles, Shield
 } from 'lucide-react';
+
 import { WelcomeConsent } from './components/WelcomeConsent';
 import { Authentication } from './components/Authentication';
 import { AcademicDiagnosis } from './components/AcademicDiagnosis';
@@ -29,290 +19,263 @@ import { PalmistryEntertainment } from './components/PalmistryEntertainment';
 import { SAMPLE_STUDENT, INITIAL_ROADMAP } from './mockData';
 import { StudentProfile, SubjectPerformance, PersonalizedRoadmap } from './types';
 
-export function App() {
-  // Navigation State
-  const [currentStep, setCurrentStep] = React.useState<
-    'welcome' | 'auth' | 'diagnosis' | 'dialogue' | 'roadmap' | 'progress' | 'career' | 'faculty' | 'mobile'
-  >('welcome');
+type Step = 'welcome' | 'auth' | 'diagnosis' | 'dialogue' | 'roadmap' | 'progress' | 'career' | 'faculty' | 'mobile';
 
+const NAV_ITEMS = [
+  { id: 'diagnosis', label: 'Academic Diagnosis', icon: GraduationCap },
+  { id: 'dialogue', label: 'AI Mentor', icon: MessageSquare },
+  { id: 'roadmap', label: '14-Day Roadmap', icon: Map },
+  { id: 'progress', label: 'Progress Report', icon: BarChart2 },
+  { id: 'career', label: 'Career & Placement', icon: Briefcase },
+  { id: 'faculty', label: 'Admin / Faculty', icon: LayoutDashboard },
+];
+
+import type { Variants } from 'framer-motion';
+
+const pageVariants: Variants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.2 } },
+};
+
+export default function App() {
+  const [step, setStep] = React.useState<Step>('welcome');
   const [language, setLanguage] = React.useState<'en' | 'hi'>('en');
   const [student, setStudent] = React.useState<StudentProfile | null>(null);
   const [prioritySubject, setPrioritySubject] = React.useState<SubjectPerformance | null>(null);
   const [roadmap, setRoadmap] = React.useState<PersonalizedRoadmap>(INITIAL_ROADMAP);
-  
-  // Section 15 Palmistry Entertainment toggle
   const [showPalmistry, setShowPalmistry] = React.useState(false);
+  const [sessionTimer, setSessionTimer] = React.useState(180);
 
-  // Inactivity timeout simulation (Section 14 session safety)
-  const [sessionTimer, setSessionTimer] = React.useState(180); // 3 mins session timeout
-
+  // Session timeout
   React.useEffect(() => {
-    if (!student || currentStep === 'welcome') return;
-    const interval = setInterval(() => {
-      setSessionTimer(prev => {
-        if (prev <= 1) {
-          handleLogout();
-          return 180;
-        }
-        return prev - 1;
+    if (!student || step === 'welcome' || step === 'auth') return;
+    const id = setInterval(() => {
+      setSessionTimer(t => {
+        if (t <= 1) { handleLogout(); return 180; }
+        return t - 1;
       });
     }, 1000);
-    return () => clearInterval(interval);
-  }, [student, currentStep]);
+    return () => clearInterval(id);
+  }, [student, step]);
 
   const handleLogout = () => {
     setStudent(null);
     setPrioritySubject(null);
-    setCurrentStep('welcome');
+    setStep('welcome');
     setSessionTimer(180);
   };
 
-  const handleAuthSuccess = (loggedStudent: StudentProfile) => {
-    setStudent(loggedStudent);
-    // Find priority subject
-    const subjectWithGap = loggedStudent.subjects.find(s => s.status === 'Needs Practice') || loggedStudent.subjects[0];
-    setPrioritySubject(subjectWithGap);
-    setCurrentStep('diagnosis');
+  const handleAuthSuccess = (s: StudentProfile) => {
+    setStudent(s);
+    const gap = s.subjects.find(sub => sub.status === 'Needs Practice' || sub.status === 'Critical Attention');
+    setPrioritySubject(gap || s.subjects[0]);
+    setStep('diagnosis');
   };
 
-  const handleSelectPriorityAndProceed = (subj: SubjectPerformance) => {
-    setPrioritySubject(subj);
-    setCurrentStep('dialogue');
-  };
+  const isInSession = student && step !== 'welcome' && step !== 'auth';
 
-  const handleRoadmapReady = (generatedRoadmap: PersonalizedRoadmap) => {
-    setRoadmap(generatedRoadmap);
-    setCurrentStep('roadmap');
+  const navigateTo = (id: string) => {
+    if (!student) {
+      setStudent(SAMPLE_STUDENT);
+      setPrioritySubject(SAMPLE_STUDENT.subjects[0]);
+    }
+    setStep(id as Step);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
-      {/* Kiosk Display Fixed Upper Bezel (Simulating 32-43" Commercial Kiosk Top Header) */}
-      <header className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center font-black text-white text-lg shadow-md">
-            T
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm tracking-tight text-white">TRIALSHOPY</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-medium">
-                AI Smart Student Mentor Kiosk
-              </span>
+    <div className="min-h-screen bg-[#030712] flex flex-col">
+      {/* ═══ TOP HEADER (Kiosk Bezel) ══════════════════════════════════════════ */}
+      {isInSession && (
+        <header className="fixed top-0 left-0 right-0 z-30 h-14 glass border-b border-white/5 flex items-center px-6 gap-4">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center font-black text-white text-sm">
+              T
             </div>
-            <span className="text-[10px] text-slate-400 block -mt-0.5">Library Common Display Unit #4</span>
+            <div className="hidden md:block">
+              <div className="text-xs font-bold text-white tracking-wide">TRIALSHOPY</div>
+              <div className="text-[10px] text-slate-500">AI Student Mentor Kiosk #LIB-04</div>
+            </div>
           </div>
-        </div>
 
-        {/* Global Navigation Pills for Demo / Interactive exploration */}
-        <div className="hidden lg:flex items-center gap-1.5 bg-slate-950 p-1 rounded-2xl border border-slate-800 text-xs">
-          <button
-            onClick={() => setCurrentStep('welcome')}
-            className={`px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
-              currentStep === 'welcome' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            1. Welcome
-          </button>
-          <button
-            onClick={() => {
-              if (!student) setStudent(SAMPLE_STUDENT);
-              setCurrentStep('diagnosis');
-            }}
-            className={`px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
-              currentStep === 'diagnosis' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            2. Diagnosis
-          </button>
-          <button
-            onClick={() => {
-              if (!student) setStudent(SAMPLE_STUDENT);
-              if (!prioritySubject) setPrioritySubject(SAMPLE_STUDENT.subjects[0]);
-              setCurrentStep('dialogue');
-            }}
-            className={`px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
-              currentStep === 'dialogue' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            3. AI Mentor
-          </button>
-          <button
-            onClick={() => {
-              if (!student) setStudent(SAMPLE_STUDENT);
-              setCurrentStep('roadmap');
-            }}
-            className={`px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
-              currentStep === 'roadmap' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            4. 14-Day Roadmap
-          </button>
-          <button
-            onClick={() => {
-              if (!student) setStudent(SAMPLE_STUDENT);
-              setCurrentStep('progress');
-            }}
-            className={`px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
-              currentStep === 'progress' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            5. Progress Review
-          </button>
-          <button
-            onClick={() => {
-              if (!student) setStudent(SAMPLE_STUDENT);
-              setCurrentStep('career');
-            }}
-            className={`px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
-              currentStep === 'career' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            6. Career & Placement
-          </button>
-          <button
-            onClick={() => setCurrentStep('faculty')}
-            className={`px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer ${
-              currentStep === 'faculty' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            7. Admin / Faculty
-          </button>
-        </div>
+          <div className="w-px h-6 bg-slate-800 mx-1 flex-shrink-0 hidden md:block" />
 
-        {/* Right Session Utility Actions */}
-        <div className="flex items-center gap-3">
-          {/* Optional Palmistry Entertainment Button (Section 15) */}
-          <button
-            onClick={() => setShowPalmistry(true)}
-            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 cursor-pointer"
-            title="Optional Entertainment Demo (Section 15)"
-          >
-            <Hand className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Palm Demo</span>
-          </button>
+          {/* Nav tabs */}
+          <nav className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
+            {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
+              const active = step === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => navigateTo(id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                    active
+                      ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${active ? 'text-indigo-400' : ''}`} />
+                  <span className="hidden lg:inline">{label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-          {student && (
-            <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-400 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">
-                <Clock className="w-3 h-3 text-amber-400" />
-                <span>Timeout in {sessionTimer}s</span>
+          {/* Right: session utilities */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Student chip */}
+            {student && (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800">
+                <img src={student.avatar} alt={student.name} className="w-5 h-5 rounded-md object-cover" />
+                <span className="text-xs font-medium text-slate-200">{student.name}</span>
+                <span className="text-[10px] text-slate-500">{student.rollNo}</span>
               </div>
+            )}
 
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/40 text-rose-300 font-semibold cursor-pointer transition-all"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>End Session</span>
-              </button>
+            {/* Timer */}
+            <div className={`hidden md:flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg border ${
+              sessionTimer < 30
+                ? 'bg-rose-950/60 border-rose-500/30 text-rose-300'
+                : 'bg-slate-900 border-slate-800 text-slate-400'
+            }`}>
+              <Clock className="w-3 h-3" />
+              <span>{Math.floor(sessionTimer / 60)}:{String(sessionTimer % 60).padStart(2, '0')}</span>
             </div>
-          )}
-        </div>
-      </header>
 
-      {/* Main Dynamic Viewport */}
-      <main className="flex-1 p-4 md:p-6 overflow-y-auto">
-        {currentStep === 'welcome' && (
-          <WelcomeConsent
-            language={language}
-            onLanguageChange={setLanguage}
-            onStartAuth={() => setCurrentStep('auth')}
-          />
-        )}
+            {/* Palm demo */}
+            <button
+              onClick={() => setShowPalmistry(true)}
+              className="p-1.5 rounded-lg bg-slate-900 border border-amber-500/20 text-amber-400 hover:bg-amber-500/10 cursor-pointer transition-all"
+              title="Optional entertainment demo (Section 15)"
+            >
+              <Hand className="w-3.5 h-3.5" />
+            </button>
 
-        {currentStep === 'auth' && (
-          <Authentication
-            language={language}
-            onSuccess={handleAuthSuccess}
-            onBack={() => setCurrentStep('welcome')}
-          />
-        )}
+            {/* Logout */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-950/50 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 text-xs font-semibold cursor-pointer transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">End Session</span>
+            </button>
+          </div>
+        </header>
+      )}
 
-        {currentStep === 'diagnosis' && (
-          <AcademicDiagnosis
-            student={student || SAMPLE_STUDENT}
-            language={language}
-            onProceedToMentor={handleSelectPriorityAndProceed}
-          />
-        )}
+      {/* ═══ MAIN CONTENT ═══════════════════════════════════════════════════════ */}
+      <main className={`flex-1 ${isInSession ? 'pt-14' : ''} overflow-y-auto`}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="min-h-full"
+          >
+            {step === 'welcome' && (
+              <WelcomeConsent
+                language={language}
+                onLanguageChange={setLanguage}
+                onStartAuth={() => setStep('auth')}
+              />
+            )}
 
-        {currentStep === 'dialogue' && (
-          <MentorConversation
-            student={student || SAMPLE_STUDENT}
-            prioritySubject={prioritySubject || (student || SAMPLE_STUDENT).subjects[0]}
-            language={language}
-            onRoadmapGenerated={handleRoadmapReady}
-          />
-        )}
+            {step === 'auth' && (
+              <Authentication
+                language={language}
+                onSuccess={handleAuthSuccess}
+                onBack={() => setStep('welcome')}
+              />
+            )}
 
-        {currentStep === 'roadmap' && (
-          <PersonalizedRoadmapView
-            roadmap={roadmap}
-            student={student || SAMPLE_STUDENT}
-            language={language}
-            onOpenMobileView={() => setCurrentStep('mobile')}
-            onOpenReview={() => setCurrentStep('progress')}
-          />
-        )}
+            {step === 'diagnosis' && (
+              <AcademicDiagnosis
+                student={student || SAMPLE_STUDENT}
+                language={language}
+                onProceedToMentor={(subj) => {
+                  setPrioritySubject(subj);
+                  setStep('dialogue');
+                }}
+              />
+            )}
 
-        {currentStep === 'progress' && (
-          <ProgressReport
-            roadmap={roadmap}
-            student={student || SAMPLE_STUDENT}
-            language={language}
-            onRequestFacultyReferral={(note) => {
-              alert(`Faculty Referral Ticket Created! Note dispatched to Prof. Kulkarni: "${note}"`);
-            }}
-          />
-        )}
+            {step === 'dialogue' && (
+              <MentorConversation
+                student={student || SAMPLE_STUDENT}
+                prioritySubject={prioritySubject || (student || SAMPLE_STUDENT).subjects[0]}
+                language={language}
+                onRoadmapGenerated={(r) => {
+                  setRoadmap(r);
+                  setStep('roadmap');
+                }}
+              />
+            )}
 
-        {currentStep === 'career' && (
-          <CareerPlacement
-            student={student || SAMPLE_STUDENT}
-            language={language}
-          />
-        )}
+            {step === 'roadmap' && (
+              <PersonalizedRoadmapView
+                roadmap={roadmap}
+                student={student || SAMPLE_STUDENT}
+                language={language}
+                onOpenMobileView={() => setStep('mobile')}
+                onOpenReview={() => setStep('progress')}
+              />
+            )}
 
-        {currentStep === 'faculty' && (
-          <FacultyAdminDashboard
-            language={language}
-            onBackToKiosk={() => setCurrentStep('welcome')}
-          />
-        )}
+            {step === 'progress' && (
+              <ProgressReport
+                roadmap={roadmap}
+                student={student || SAMPLE_STUDENT}
+                language={language}
+                onRequestFacultyReferral={(note) => {
+                  alert(`Faculty referral dispatched! Note: "${note}"`);
+                }}
+              />
+            )}
 
-        {currentStep === 'mobile' && (
-          <MobileCompanionView
-            roadmap={roadmap}
-            student={student || SAMPLE_STUDENT}
-            onBack={() => setCurrentStep('roadmap')}
-          />
-        )}
+            {step === 'career' && (
+              <CareerPlacement
+                student={student || SAMPLE_STUDENT}
+                language={language}
+              />
+            )}
+
+            {step === 'faculty' && (
+              <FacultyAdminDashboard
+                language={language}
+                onBackToKiosk={() => setStep('welcome')}
+              />
+            )}
+
+            {step === 'mobile' && (
+              <MobileCompanionView
+                roadmap={roadmap}
+                student={student || SAMPLE_STUDENT}
+                onBack={() => setStep('roadmap')}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
-      {/* Optional Palmistry Demonstration Modal */}
-      <PalmistryEntertainment
-        isOpen={showPalmistry}
-        onClose={() => setShowPalmistry(false)}
-      />
+      {/* ═══ STATUS BAR (Kiosk Lower Bezel) ═══════════════════════════════════ */}
+      {isInSession && (
+        <footer className="h-8 glass border-t border-white/5 px-6 flex items-center justify-between text-[10px] text-slate-600">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              SIS Connector: Active
+            </span>
+            <span>DPDP Compliant · No Face Recognition · Session Encrypted</span>
+          </div>
+          <span>Trialshopy Smart Campus · Assignment Deadline 13 Nov 2026</span>
+        </footer>
+      )}
 
-      {/* Kiosk Display Lower Status Strip */}
-      <footer className="bg-slate-950/90 border-t border-slate-900 px-6 py-2.5 flex items-center justify-between text-[11px] text-slate-500">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            Campus ERP/SIS Connector: Connected
-          </span>
-          <span>•</span>
-          <span>DPDP Compliant (No Face / Emotion Recognition)</span>
-        </div>
-
-        <div>
-          Assignment Submission: 13 November 2026 • Trialshopy Project Assignment
-        </div>
-      </footer>
+      {/* Palm Demo */}
+      <PalmistryEntertainment isOpen={showPalmistry} onClose={() => setShowPalmistry(false)} />
     </div>
   );
 }
-
-export default App;

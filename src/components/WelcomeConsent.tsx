@@ -1,17 +1,9 @@
 import React from 'react';
-import { 
-  Eye, 
-  Camera, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Sparkles, 
-  Lock, 
-  Languages, 
-  UserCheck, 
-  ArrowRight,
-  Info,
-  QrCode,
-  Volume2
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Eye, Camera, CheckCircle2, ShieldCheck, Sparkles,
+  Lock, Languages, ArrowRight, Volume2, Wifi, Zap,
+  Shield, Info, ChevronRight, Circle
 } from 'lucide-react';
 
 interface WelcomeConsentProps {
@@ -20,151 +12,241 @@ interface WelcomeConsentProps {
   onLanguageChange: (lang: 'en' | 'hi') => void;
 }
 
-export const WelcomeConsent: React.FC<WelcomeConsentProps> = ({ 
-  onStartAuth, 
-  language, 
-  onLanguageChange 
+export const WelcomeConsent: React.FC<WelcomeConsentProps> = ({
+  onStartAuth,
+  language,
+  onLanguageChange
 }) => {
   const [agreed, setAgreed] = React.useState(false);
-  const [simulatedPersonDetected, setSimulatedPersonDetected] = React.useState(true);
+  const [hovered, setHovered] = React.useState(false);
 
   return (
-    <div className="relative min-h-[85vh] flex flex-col justify-between items-center text-center p-6 max-w-5xl mx-auto">
-      {/* Top Status & Sensor Indicators */}
-      <div className="w-full flex items-center justify-between border-b border-slate-800/80 pb-4">
+    <div className="relative min-h-screen flex flex-col bg-[#030712] overflow-hidden">
+      {/* Ambient Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-indigo-600/8 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-40 -right-20 w-[500px] h-[500px] bg-cyan-500/6 rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-600/4 rounded-full blur-[160px]" />
+        {/* Grid */}
+        <div className="absolute inset-0 bg-grid opacity-50" />
+      </div>
+
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/5">
+        <div className="flex items-center gap-4">
+          {/* Logo */}
+          <div className="relative">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-indigo-500/30">
+              T
+            </div>
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#030712] status-live" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-white tracking-wide">TRIALSHOPY</div>
+            <div className="text-[11px] text-slate-500 font-medium">Smart Campus Initiative</div>
+          </div>
+        </div>
+
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>Kiosk Hardware #LIB-04 • Library Central</span>
+          {/* Sensor strip */}
+          <div className="flex items-center gap-3 px-4 py-2 glass rounded-xl text-xs">
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <Eye className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Proximity:</span>
+              <span className="text-cyan-300 font-semibold">Student Detected</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-700" />
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <Camera className="w-3.5 h-3.5" />
+              <span className="text-emerald-300">No Recording Active</span>
+            </div>
+            <div className="w-px h-3.5 bg-slate-700" />
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <Wifi className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="text-indigo-300">Kiosk #LIB-04</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs">
-            <Eye className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-slate-400">Proximity Sensor:</span>
-            <span className="text-cyan-300 font-medium">{simulatedPersonDetected ? 'Student Present' : 'Idle / Standby'}</span>
-          </div>
-        </div>
-
-        {/* Language selector & Camera Privacy indicator */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-xs text-emerald-300">
-            <Camera className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Camera: Passive Presence Only (No Recording / Face ID Disabled)</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
-            <Languages className="w-4 h-4 ml-2 text-indigo-400" />
-            <button 
-              onClick={() => onLanguageChange('en')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
-                language === 'en' 
-                  ? 'bg-indigo-600 text-white shadow-md' 
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              English
-            </button>
-            <button 
-              onClick={() => onLanguageChange('hi')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
-                language === 'hi' 
-                  ? 'bg-indigo-600 text-white shadow-md' 
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              हिन्दी (Hindi)
-            </button>
+          {/* Language Toggle */}
+          <div className="flex items-center gap-1 p-1 glass rounded-xl">
+            {(['en', 'hi'] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => onLanguageChange(lang)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                  language === lang
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/40'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {lang === 'en' ? 'EN' : 'हिन्दी'}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Kiosk Welcome Hero */}
-      <div className="py-8 my-auto flex flex-col items-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm font-medium mb-6">
-          <Sparkles className="w-4 h-4 text-indigo-400 animate-spin" style={{ animationDuration: '6s' }} />
-          <span>Trialshopy Smart Campus Initiative</span>
-        </div>
-
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4">
-          AI Smart Student Mentor
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-sky-300 to-teal-300 mt-2">
-            & Career Guidance Display
-          </span>
-        </h1>
-
-        <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-8">
-          {language === 'en' 
-            ? 'Touch to begin your personalized academic diagnostic, interactive voice mentoring, and tailored 14-day study roadmap.'
-            : 'अपने व्यक्तिगत शैक्षणिक निदान, इंटरैक्टिव वॉयस मेंटरिंग और 14-दिवसीय अध्ययन रोडमैप के लिए स्पर्श करें।'}
-        </p>
-
-        {/* Privacy Notice & Responsible AI Principles Box */}
-        <div className="w-full max-w-2xl bg-slate-900/90 border border-slate-800 rounded-2xl p-6 text-left shadow-2xl backdrop-blur-md mb-8">
-          <div className="flex items-center gap-2 text-indigo-400 font-semibold mb-3">
-            <ShieldCheck className="w-5 h-5 text-indigo-400" />
-            <span className="text-sm uppercase tracking-wider">Privacy Notice & Ethical Scope (DPDP Framework)</span>
-          </div>
-
-          <ul className="space-y-2.5 text-xs text-slate-300">
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
-              <span><strong>Data Minimization:</strong> We only read approved academic grades, attendance, and enrolled course records for this session.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
-              <span><strong>No Face or Emotion Biometrics:</strong> Camera is strictly for presence detection. The system never infers mood, honesty, or mental state from facial cues.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 text-teal-400 shrink-0 mt-0.5" />
-              <span><strong>Supportive Not Determinative:</strong> AI advice is designed to assist you; high-stakes evaluations or referrals are handled by verified human faculty counsellors.</span>
-            </li>
-          </ul>
-
-          <div className="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
-            <label className="flex items-center gap-3 cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                checked={agreed} 
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-700 bg-slate-800 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer"
-              />
-              <span className="text-xs font-medium text-slate-200">
-                I understand and consent to academic record analysis for this mentoring session.
-              </span>
-            </label>
-          </div>
-        </div>
-
-        {/* Start Button */}
-        <button
-          onClick={onStartAuth}
-          disabled={!agreed}
-          className={`group flex items-center gap-3 px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all transform ${
-            agreed 
-              ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white cursor-pointer hover:scale-105 shadow-indigo-500/25' 
-              : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
-          }`}
+      {/* Main Content */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-10">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="w-full max-w-3xl mx-auto text-center"
         >
-          <span>{language === 'en' ? 'Touch Screen to Authenticate' : 'प्रमाणीकरण के लिए स्क्रीन स्पर्श करें'}</span>
-          <ArrowRight className={`w-5 h-5 transition-transform ${agreed ? 'group-hover:translate-x-1' : ''}`} />
-        </button>
-      </div>
+          {/* Eyebrow badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-sm font-medium mb-8"
+          >
+            <Sparkles className="w-4 h-4 text-indigo-400 animate-spin-slow" />
+            <span>AI-Powered Academic Mentoring Platform</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 status-live" />
+          </motion.div>
 
-      {/* Footer Info */}
-      <div className="w-full flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/80 pt-4">
-        <div className="flex items-center gap-4">
+          {/* Hero heading */}
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white mb-4"
+          >
+            AI Smart Student
+            <span className="block gradient-text mt-1">Mentor Display</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-lg text-slate-400 max-w-xl mx-auto leading-relaxed mb-10"
+          >
+            {language === 'en'
+              ? 'Personalized academic diagnosis, voice-guided mentoring, and a custom 14-day study roadmap — available here, now.'
+              : 'व्यक्तिगत शैक्षणिक निदान, वॉयस मेंटरिंग और 14-दिवसीय अध्ययन रोडमैप — यहाँ, अभी।'}
+          </motion.p>
+
+          {/* Privacy Notice Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="gradient-border rounded-2xl mb-8 text-left"
+          >
+            <div className="bg-slate-900/80 rounded-2xl p-6 backdrop-blur-sm">
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-200 mb-4">
+                <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                <span>Privacy Notice & Responsible AI Policy</span>
+                <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-medium">
+                  DPDP Compliant
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                {[
+                  {
+                    icon: Lock,
+                    color: 'indigo',
+                    title: 'Data Minimization',
+                    desc: 'Only approved academic grades, attendance, and course enrolment records are retrieved.'
+                  },
+                  {
+                    icon: Camera,
+                    color: 'emerald',
+                    title: 'No Biometric Recording',
+                    desc: 'Camera is for presence detection only. No face recognition, no emotion inference, no recording.'
+                  },
+                  {
+                    icon: Shield,
+                    color: 'cyan',
+                    title: 'Supportive, Not Determinative',
+                    desc: 'AI advice supports students. All high-stakes decisions involve human faculty counsellors.'
+                  }
+                ].map(({ icon: Icon, color, title, desc }) => (
+                  <div key={title} className="flex gap-3 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                    <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center ${
+                      color === 'indigo' ? 'bg-indigo-500/15 text-indigo-400' :
+                      color === 'emerald' ? 'bg-emerald-500/15 text-emerald-400' :
+                      'bg-cyan-500/15 text-cyan-400'
+                    }`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-white mb-0.5">{title}</div>
+                      <div className="text-[11px] text-slate-400 leading-relaxed">{desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Consent checkbox */}
+              <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-700/60 bg-slate-800/30 hover:bg-slate-800/50 cursor-pointer transition-colors group">
+                <div className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                  agreed
+                    ? 'bg-indigo-600 border-indigo-600 shadow-md shadow-indigo-600/40'
+                    : 'border-slate-600 bg-slate-900 group-hover:border-indigo-500/60'
+                }`}>
+                  {agreed && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="sr-only" />
+                <span className="text-sm text-slate-300 leading-relaxed">
+                  <span className="font-semibold text-white">I understand and consent</span> — my academic records will be accessed solely for this mentoring session, and my data will not be retained beyond session timeout.
+                </span>
+              </label>
+            </div>
+          </motion.div>
+
+          {/* CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <motion.button
+              onClick={onStartAuth}
+              disabled={!agreed}
+              onHoverStart={() => setHovered(true)}
+              onHoverEnd={() => setHovered(false)}
+              whileHover={agreed ? { scale: 1.02 } : {}}
+              whileTap={agreed ? { scale: 0.98 } : {}}
+              className={`relative group inline-flex items-center gap-3 px-10 py-4 rounded-2xl text-base font-bold transition-all duration-300 ${
+                agreed
+                  ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white cursor-pointer shadow-2xl shadow-indigo-600/40 hover:shadow-indigo-600/60'
+                  : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+              }`}
+            >
+              {agreed && (
+                <span className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-500 opacity-0 group-hover:opacity-20 transition-opacity" />
+              )}
+              <span className="relative">
+                {language === 'en' ? 'Touch to Begin Authentication' : 'प्रमाणीकरण के लिए स्पर्श करें'}
+              </span>
+              <ArrowRight className={`relative w-5 h-5 transition-transform duration-200 ${agreed && hovered ? 'translate-x-1' : ''}`} />
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      </main>
+
+      {/* Footer Status Bar */}
+      <footer className="relative z-10 flex items-center justify-between px-8 py-3.5 border-t border-white/5 text-[11px] text-slate-500">
+        <div className="flex items-center gap-6">
           <span className="flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5 text-slate-400" /> 256-bit University TLS Encrypted
+            <Lock className="w-3 h-3 text-slate-500" />
+            256-bit TLS Encrypted
           </span>
           <span className="flex items-center gap-1.5">
-            <Volume2 className="w-3.5 h-3.5 text-slate-400" /> Directional Acoustic Audio Enabled
+            <Volume2 className="w-3 h-3 text-slate-500" />
+            Directional Audio Active
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Zap className="w-3 h-3 text-slate-500" />
+            Version 2.4.0
           </span>
         </div>
-        <div>Trialshopy EdTech Campus Solution • Version 2.4.0</div>
-      </div>
+        <span>Trialshopy EdTech · Library Central · Assignment Deadline: 13 Nov 2026</span>
+      </footer>
     </div>
   );
 };

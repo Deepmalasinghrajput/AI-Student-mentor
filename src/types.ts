@@ -77,3 +77,4 @@ export interface FacultyInterventionQueue {
   timestamp: string;
   status: 'Pending' | 'Contacted' | 'Resolved';
 }
+

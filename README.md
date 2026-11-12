@@ -73,3 +73,4 @@ npx vite build
 npx vite preview
 ```
 All production bundle assets are built in the [`dist/`](file:///c:/Users/Deepmala%20singh/Student_mentor/dist) folder.
+

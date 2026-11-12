@@ -1,21 +1,8 @@
 import React from 'react';
-import { 
-  Server, 
-  Activity, 
-  Users, 
-  TrendingUp, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  FileCheck, 
-  ShieldAlert, 
-  Search,
-  Filter,
-  Check,
-  ChevronRight,
-  Database,
-  Cpu,
-  RefreshCw
+import { motion } from 'framer-motion';
+import {
+  Server, Activity, TrendingUp, AlertTriangle, Check,
+  Users, BarChart2, Wifi, Cpu, Shield
 } from 'lucide-react';
 import { INITIAL_INTERVENTIONS } from '../mockData';
 import { FacultyInterventionQueue } from '../types';
@@ -25,235 +12,198 @@ interface FacultyAdminDashboardProps {
   language: 'en' | 'hi';
 }
 
-export const FacultyAdminDashboard: React.FC<FacultyAdminDashboardProps> = ({ 
-  onBackToKiosk,
-  language 
+const StatCard = ({
+  label, value, sub, icon: Icon, color = 'slate', trend
+}: {
+  label: string; value: string; sub?: string; icon: any; color?: string; trend?: string;
 }) => {
-  const [interventions, setInterventions] = React.useState<FacultyInterventionQueue[]>(INITIAL_INTERVENTIONS);
-  const [filterRole, setFilterRole] = React.useState<'All' | 'High' | 'Medium'>('All');
-  const [searchQuery, setSearchQuery] = React.useState('');
-
-  const resolveTicket = (id: string) => {
-    setInterventions(prev => prev.map(item => {
-      if (item.id === id) {
-        return { ...item, status: 'Resolved' };
-      }
-      return item;
-    }));
+  const colors: Record<string, string> = {
+    slate: 'text-slate-400 bg-slate-800/60',
+    indigo: 'text-indigo-400 bg-indigo-500/15',
+    emerald: 'text-emerald-400 bg-emerald-500/15',
+    amber: 'text-amber-400 bg-amber-500/15',
   };
+  return (
+    <div className="glass rounded-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs text-slate-400 font-medium">{label}</span>
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${colors[color]}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+      </div>
+      <div className="text-xl font-black text-white">{value}</div>
+      {sub && <div className={`text-xs mt-0.5 ${trend === 'up' ? 'text-emerald-400' : 'text-slate-500'}`}>{sub}</div>}
+    </div>
+  );
+};
 
-  const filtered = interventions.filter(i => {
-    if (filterRole !== 'All' && i.priority !== filterRole) return false;
-    if (searchQuery && !i.studentName.toLowerCase().includes(searchQuery.toLowerCase()) && !i.rollNo.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
+export const FacultyAdminDashboard: React.FC<FacultyAdminDashboardProps> = ({
+  onBackToKiosk,
+  language,
+}) => {
+  const [tickets, setTickets] = React.useState<FacultyInterventionQueue[]>(INITIAL_INTERVENTIONS);
+  const [filter, setFilter] = React.useState<'All' | 'High' | 'Medium'>('All');
+
+  const resolve = (id: string) =>
+    setTickets(prev => prev.map(t => (t.id === id ? { ...t, status: 'Resolved' } : t)));
+
+  const filtered = tickets.filter(t => filter === 'All' || t.priority === filter);
 
   return (
-    <div className="max-w-7xl mx-auto py-4 px-3">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-3xl p-6 mb-6 shadow-xl">
+    <div className="max-w-7xl mx-auto px-4 py-4 space-y-5">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4"
+      >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
             <Server className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl md:text-2xl font-bold text-white">Faculty & Campus Admin Portal</h1>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 font-semibold">
-                Authorized Role: Faculty Mentor & Dept Head
+              <h1 className="text-xl font-bold text-white">Faculty & Admin Portal</h1>
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 font-semibold">
+                Sections 11–13
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Live fleet telemetry, privacy-controlled intervention queues, and department aggregate analytics.
-            </p>
+            <p className="text-xs text-slate-400 mt-0.5">Fleet telemetry, department analytics & intervention queues</p>
           </div>
         </div>
+        <button
+          onClick={onBackToKiosk}
+          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs cursor-pointer transition-all shadow-md shadow-indigo-600/25"
+        >
+          ← Switch to Kiosk View
+        </button>
+      </motion.div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBackToKiosk}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg transition-all cursor-pointer"
-          >
-            ← Switch to Kiosk Display View
-          </button>
-        </div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="Kiosk Fleet Health" value="4 / 4 Online" sub="99.8% uptime · Library & Cafeteria" icon={Wifi} color="emerald" trend="up" />
+        <StatCard label="Daily Mentor Sessions" value="142" sub="Avg 5.2 mins per session" icon={Activity} color="indigo" />
+        <StatCard label="Roadmap Completion" value="76.4%" sub="+12% vs last semester" icon={TrendingUp} color="emerald" trend="up" />
+        <StatCard label="Pending Interventions" value={`${tickets.filter(t => t.status !== 'Resolved').length} Active`} sub="Faculty action required" icon={AlertTriangle} color="amber" />
       </div>
 
-      {/* Kiosk Hardware & Fleet Telemetry Cards (Section 12 & 13) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow">
-          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-            <span>Kiosk Hardware Health</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          </div>
-          <div className="text-xl font-bold text-white">4 / 4 Units Online</div>
-          <span className="text-[11px] text-emerald-400 mt-1 block">99.8% Uptime (Library & Cafeteria)</span>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow">
-          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-            <span>Daily Mentoring Sessions</span>
-            <Activity className="w-4 h-4 text-indigo-400" />
-          </div>
-          <div className="text-xl font-bold text-white">142 Completed</div>
-          <span className="text-[11px] text-slate-400 mt-1 block">Avg session: 5.2 mins</span>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow">
-          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-            <span>Roadmap Completion Rate</span>
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-xl font-bold text-white">76.4%</div>
-          <span className="text-[11px] text-emerald-400 mt-1 block">+12% vs last semester baseline</span>
-        </div>
-
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow">
-          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-            <span>Pending Interventions</span>
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-xl font-bold text-amber-400">{interventions.filter(i => i.status !== 'Resolved').length} Active</div>
-          <span className="text-[11px] text-slate-400 mt-1 block">Referred by students or rules</span>
-        </div>
-      </div>
-
-      {/* Aggregate Subject Diagnostic Trends */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-        <div className="lg:col-span-4 bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-xl">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center justify-between">
-            <span>Dept Subject Bottlenecks</span>
-            <span className="text-[10px] text-indigo-400 font-mono">CSE Dept S5</span>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Department Bottlenecks */}
+        <motion.div
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="lg:col-span-4 glass rounded-2xl p-6"
+        >
+          <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <BarChart2 className="w-4 h-4 text-indigo-400" />
+            Department Subject Bottlenecks
+            <span className="ml-auto text-[10px] text-indigo-400 font-mono">CSE S5</span>
           </h3>
 
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-white font-medium">CS301: Data Structures</span>
-                <span className="font-bold text-amber-400">42% Need Revision</span>
+          <div className="space-y-5">
+            {[
+              { subject: 'CS301: Data Structures', pct: 42, hotspot: 'Trees traversal · Graph DFS/BFS', color: 'amber' },
+              { subject: 'MA301: Discrete Math', pct: 31, hotspot: 'Recurrence relations', color: 'amber' },
+              { subject: 'CS302: Database Systems', pct: 14, hotspot: 'B+ Tree Indexing', color: 'emerald' },
+              { subject: 'CS303: Operating Systems', pct: 8, hotspot: 'CPU Scheduling', color: 'emerald' },
+            ].map(({ subject, pct, hotspot, color }) => (
+              <div key={subject}>
+                <div className="flex justify-between items-center text-xs mb-1.5">
+                  <span className="font-medium text-slate-200 truncate">{subject}</span>
+                  <span className={`font-bold font-mono ${color === 'amber' ? 'text-amber-400' : 'text-emerald-400'}`}>{pct}%</span>
+                </div>
+                <div className="h-1.5 bg-slate-900 rounded-full overflow-hidden mb-1">
+                  <div
+                    className={`h-full rounded-full ${color === 'amber' ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div className="text-[10px] text-slate-500">Hotspot: {hotspot}</div>
               </div>
-              <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-                <div className="bg-amber-500 h-full w-[42%]"></div>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Hotspots: Trees traversal, Graph DFS/BFS</span>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-white font-medium">MA301: Discrete Math</span>
-                <span className="font-bold text-amber-400">31% Need Revision</span>
-              </div>
-              <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-                <div className="bg-amber-500 h-full w-[31%]"></div>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Hotspots: Recurrence relations</span>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-white font-medium">CS302: Database Systems</span>
-                <span className="font-bold text-emerald-400">14% Need Revision</span>
-              </div>
-              <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full w-[14%]"></div>
-              </div>
-              <span className="text-[10px] text-slate-500 mt-0.5 block">Hotspots: B+ Tree Indexing</span>
-            </div>
+            ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Intervention Queue (Section 6 Module I & Section 9) */}
-        <div className="lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4">
+        {/* Intervention Queue */}
+        <motion.div
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-8 glass rounded-2xl p-6"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <span>Authorized Faculty Intervention Queue</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">
+                Authorized Faculty Intervention Queue
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/20">
                   Privacy-Governed
                 </span>
               </h3>
-              <p className="text-xs text-slate-400">
-                Action cases requiring human counsellor or faculty 1-on-1 attention.
-              </p>
+              <p className="text-xs text-slate-400 mt-0.5">Cases requiring human counsellor or faculty 1-on-1 attention</p>
             </div>
 
-            {/* Filter buttons */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setFilterRole('All')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
-                  filterRole === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilterRole('High')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
-                  filterRole === 'High' ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-400'
-                }`}
-              >
-                High Priority
-              </button>
-              <button
-                onClick={() => setFilterRole('Medium')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
-                  filterRole === 'Medium' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-400'
-                }`}
-              >
-                Medium
-              </button>
+            <div className="flex gap-1.5">
+              {(['All', 'High', 'Medium'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                    filter === f
+                      ? f === 'High'
+                        ? 'bg-rose-600 text-white'
+                        : f === 'Medium'
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-indigo-600 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Intervention tickets list */}
-          <div className="space-y-3">
-            {filtered.map(t => {
-              const isResolved = t.status === 'Resolved';
+          <div className="space-y-2.5">
+            {filtered.map((t) => {
+              const resolved = t.status === 'Resolved';
               return (
-                <div 
+                <div
                   key={t.id}
-                  className={`p-4 rounded-2xl border transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-3 ${
-                    isResolved 
-                      ? 'bg-slate-950/40 border-slate-800/50 opacity-60' 
-                      : 'bg-slate-950 border-slate-800 shadow-md'
+                  className={`flex flex-col md:flex-row items-start md:items-center gap-3 p-4 rounded-xl border transition-all ${
+                    resolved
+                      ? 'opacity-50 bg-slate-900/30 border-slate-800/40'
+                      : 'bg-slate-900/70 border-slate-800/60 hover:border-slate-700'
                   }`}
                 >
-                  <div>
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
                       <span className="text-xs font-bold text-white">{t.studentName}</span>
                       <span className="text-[11px] font-mono text-slate-400">({t.rollNo})</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                        t.priority === 'High' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'
+                        t.priority === 'High'
+                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                          : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
                       }`}>
                         {t.priority}
                       </span>
-                      <span className="text-[10px] text-slate-500">• {t.timestamp}</span>
+                      <span className="text-[10px] text-slate-500">{t.timestamp}</span>
                     </div>
-
-                    <div className="text-xs font-semibold text-indigo-400 mt-1">
-                      Subject: {t.subject}
-                    </div>
-
-                    <p className="text-xs text-slate-300 mt-1 max-w-xl">
-                      {t.issue}
-                    </p>
+                    <div className="text-xs text-indigo-400 font-semibold">{t.subject}</div>
+                    <p className="text-xs text-slate-300 mt-1 leading-relaxed max-w-xl">{t.issue}</p>
                   </div>
 
-                  <div className="shrink-0">
-                    {isResolved ? (
-                      <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold px-3 py-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
-                        <Check className="w-4 h-4" /> Resolved
+                  <div className="flex-shrink-0">
+                    {resolved ? (
+                      <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <Check className="w-3.5 h-3.5" /> Resolved
                       </span>
                     ) : (
                       <button
-                        onClick={() => resolveTicket(t.id)}
-                        className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-emerald-600 hover:text-white text-slate-300 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+                        onClick={() => resolve(t.id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-emerald-700 hover:text-white text-slate-300 text-xs font-semibold cursor-pointer transition-all"
                       >
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Mark Actioned</span>
+                        <Check className="w-3.5 h-3.5" /> Mark Actioned
                       </button>
                     )}
                   </div>
@@ -261,7 +211,7 @@ export const FacultyAdminDashboard: React.FC<FacultyAdminDashboardProps> = ({
               );
             })}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
